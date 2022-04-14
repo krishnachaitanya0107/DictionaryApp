@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Dictionary App</string>
+    <string name="search_icon">Search Icon</string>
+    <string name="close_icon">Close Icon</string>
+</resources>
