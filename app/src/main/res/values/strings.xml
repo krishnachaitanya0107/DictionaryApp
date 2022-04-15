@@ -2,4 +2,5 @@
     <string name="app_name">Dictionary App</string>
     <string name="search_icon">Search Icon</string>
     <string name="close_icon">Close Icon</string>
+    <string name="request_permission_msg">Please grant us permission to capture your audio in order to use voice search</string>
 </resources>

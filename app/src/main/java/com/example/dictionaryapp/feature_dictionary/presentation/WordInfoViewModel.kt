@@ -1,7 +1,9 @@
 package com.example.dictionaryapp.feature_dictionary.presentation
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dictionaryapp.core.util.Resource
@@ -28,6 +30,9 @@ class WordInfoViewModel @Inject constructor(
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
+
+    var textFromSpeech:String? by mutableStateOf(null)
+
 
     private var searchJob: Job? = null
 
