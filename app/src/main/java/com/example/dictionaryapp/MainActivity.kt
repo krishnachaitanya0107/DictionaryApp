@@ -1,6 +1,9 @@
 package com.example.dictionaryapp
 
+import android.content.Context
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -15,18 +18,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.dictionaryapp.feature_dictionary.domain.model.WordInfo
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoItem
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoViewModel
 import com.example.dictionaryapp.feature_dictionary.domain.use_case.OpenVoiceWithPermission
+import com.example.dictionaryapp.feature_dictionary.domain.use_case.generateTextForNarration
 import com.example.dictionaryapp.feature_dictionary.presentation.components.SearchTopBar
 import com.example.dictionaryapp.ui.theme.DictionaryAppTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import java.util.*
 
 @ExperimentalPermissionsApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private lateinit var textToSpeech: TextToSpeech
+    private var ttsError = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -39,6 +49,8 @@ class MainActivity : ComponentActivity() {
 
                 val searchQuery by viewModel.searchQuery
                 val scaffoldState = rememberScaffoldState()
+
+                initTextToSpeech(ctx)
 
                 LaunchedEffect(key1 = true) {
                     viewModel.eventFlow.collectLatest { event ->
@@ -56,7 +68,7 @@ class MainActivity : ComponentActivity() {
                         vm = viewModel,
                         ctxFromScreen = ctx
                     ) {
-                        if(!viewModel.textFromSpeech.isNullOrEmpty()){
+                        if (!viewModel.textFromSpeech.isNullOrEmpty()) {
                             viewModel.onSearch(viewModel.textFromSpeech!!)
                         }
                         clickToShowPermission = false
@@ -68,7 +80,7 @@ class MainActivity : ComponentActivity() {
                     floatingActionButtonPosition = FabPosition.End,
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { clickToShowPermission=true },
+                            onClick = { clickToShowPermission = true },
                             backgroundColor = MaterialTheme.colors.primary
                         ) {
                             Icon(
@@ -102,26 +114,86 @@ class MainActivity : ComponentActivity() {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                              items(state.wordInfoItems.size){ i ->
-                                  val wordInfo = state.wordInfoItems[i]
-                                  if(i > 0) {
-                                      Spacer(modifier = Modifier.height(8.dp))
-                                  }
-                                  WordInfoItem(wordInfo = wordInfo)
-                                  if(i < state.wordInfoItems.size - 1) {
-                                      Divider()
-                                  }
-                              }
+                                items(state.wordInfoItems.size) { i ->
+                                    val wordInfo = state.wordInfoItems[i]
+                                    if (i > 0) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                    WordInfoItem(
+                                        wordInfo = wordInfo,
+                                        onClick = {
+                                            if (!ttsError) {
+                                                runTts(i, viewModel, wordInfo)
+                                            }
+                                        }
+                                    )
+                                    if (i < state.wordInfoItems.size - 1) {
+                                        Divider()
+                                    }
+                                }
                             }
                         }
 
-                        if(state.isLoading) {
+                        if (state.isLoading) {
                             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                         }
                     }
                 }
 
             }
+        }
+    }
+
+
+    private fun initTextToSpeech(ctx: Context) {
+        textToSpeech = TextToSpeech(ctx) { i ->
+            if (i != TextToSpeech.ERROR) {
+                ttsError = false
+            }
+        }
+
+        if (!ttsError) {
+            textToSpeech.language = Locale.ENGLISH
+        }
+    }
+
+    private fun runTts(
+        i: Int,
+        viewModel: WordInfoViewModel,
+        wordInfo: WordInfo
+    ) {
+
+        if (textToSpeech.isSpeaking) {
+            textToSpeech.stop()
+
+            if (i != viewModel.currentSpeakingIndex) {
+                textToSpeech.speak(
+                    generateTextForNarration(wordInfo),
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    ""
+                )
+                viewModel.currentSpeakingIndex = i
+            }
+        } else {
+            textToSpeech.speak(
+                generateTextForNarration(wordInfo),
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                ""
+            )
+            viewModel.currentSpeakingIndex = i
+        }
+
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            textToSpeech.shutdown()
+        } catch (e: Exception) {
+            Log.d("error", e.localizedMessage ?: "unknown error")
         }
     }
 

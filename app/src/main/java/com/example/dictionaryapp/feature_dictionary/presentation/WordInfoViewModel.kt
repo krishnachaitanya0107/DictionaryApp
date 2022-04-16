@@ -31,8 +31,8 @@ class WordInfoViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    var textFromSpeech:String? by mutableStateOf(null)
-
+    var textFromSpeech: String? by mutableStateOf(null)
+    var currentSpeakingIndex = -1
 
     private var searchJob: Job? = null
 
@@ -63,8 +63,8 @@ class WordInfoViewModel @Inject constructor(
                         )
                     }
                     is Resource.Loading -> {
-                        _state.value=state.value.copy(
-                            result.data?: emptyList(),
+                        _state.value = state.value.copy(
+                            result.data ?: emptyList(),
                             true
                         )
                     }
