@@ -3,5 +3,7 @@
 
     <style name="Theme.DictionaryApp" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@color/darkBlue</item>
+        <item name="android:windowBackground">@drawable/splash_screen_bg</item>
     </style>
+
 </resources>

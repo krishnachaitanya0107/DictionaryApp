@@ -18,4 +18,6 @@ interface WordInfoDao {
     @Query("SELECT * FROM wordinfoentity WHERE word LIKE '%' || :word || '%'")
     suspend fun getWordInfo(word: String): List<WordInfoEntity>
 
+    @Query("SELECT * FROM wordinfoentity ORDER BY id DESC")
+    suspend fun getAllWordInfo():List<WordInfoEntity>
 }

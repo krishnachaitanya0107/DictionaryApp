@@ -25,6 +25,7 @@ import com.example.dictionaryapp.feature_dictionary.domain.use_case.OpenVoiceWit
 import com.example.dictionaryapp.feature_dictionary.domain.use_case.generateTextForNarration
 import com.example.dictionaryapp.feature_dictionary.presentation.components.SearchTopBar
 import com.example.dictionaryapp.ui.theme.DictionaryAppTheme
+import com.example.dictionaryapp.ui.theme.titleColor
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var textToSpeech: TextToSpeech
     private var ttsError = true
+    private var cacheLoaded=false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +77,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                if(!cacheLoaded){
+                    viewModel.loadPreviousSearches()
+                    cacheLoaded=true
+                }
+
                 Scaffold(
                     scaffoldState = scaffoldState,
                     floatingActionButtonPosition = FabPosition.End,
@@ -85,7 +92,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_mic),
-                                contentDescription = "Mic"
+                                contentDescription = "Mic",
+                                tint = MaterialTheme.colors.titleColor
                             )
                         }
                     }

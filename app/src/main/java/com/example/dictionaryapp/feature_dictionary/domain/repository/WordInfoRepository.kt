@@ -8,4 +8,6 @@ interface WordInfoRepository {
 
     fun getWordInfo(word:String): Flow<Resource<List<WordInfo>>>
 
+    fun getPreviousSearches(): Flow<Resource<List<WordInfo>>>
+
 }

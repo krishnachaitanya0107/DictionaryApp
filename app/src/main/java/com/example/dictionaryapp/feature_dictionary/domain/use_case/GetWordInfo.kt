@@ -17,4 +17,8 @@ class GetWordInfo(
         return repository.getWordInfo(word)
     }
 
+    operator fun invoke(): Flow<Resource<List<WordInfo>>> {
+        return repository.getPreviousSearches()
+    }
+
 }

@@ -116,14 +116,14 @@ fun startSpeechToText(vm: WordInfoViewModel, ctx: Context, finished: () -> Unit)
         override fun onReadyForSpeech(bundle: Bundle?) {}
         override fun onBeginningOfSpeech() {
             Toast.makeText(ctx,"Listening...",Toast.LENGTH_SHORT).show()
+            // change the color of mic icon to default color to indicate it is listening
         }
         override fun onRmsChanged(v: Float) {}
         override fun onBufferReceived(bytes: ByteArray?) {}
         override fun onEndOfSpeech() {
             finished()
             Toast.makeText(ctx,"Processing Speech...",Toast.LENGTH_SHORT).show()
-            // changing the color of your mic icon to
-            // gray to indicate it is not listening or do something you want
+            // change the color of mic icon to gray to indicate it is not listening
         }
 
         override fun onError(i: Int) {
@@ -144,7 +144,9 @@ fun startSpeechToText(vm: WordInfoViewModel, ctx: Context, finished: () -> Unit)
             }
         }
 
-        override fun onPartialResults(bundle: Bundle) {}
+        override fun onPartialResults(bundle: Bundle) {
+            // ask user to speak again or search using results obtained
+        }
         override fun onEvent(i: Int, bundle: Bundle?) {}
 
     })

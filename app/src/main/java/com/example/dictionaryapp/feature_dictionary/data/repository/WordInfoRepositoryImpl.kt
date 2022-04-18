@@ -37,4 +37,11 @@ class WordInfoRepositoryImpl(
         emit(Resource.Success(newWordInfo))
     }
 
+    override fun getPreviousSearches(): Flow<Resource<List<WordInfo>>> =flow {
+        emit(Resource.Loading())
+
+        val wordInfo = dao.getAllWordInfo().map { it.toWordInfo() }
+        emit(Resource.Success(wordInfo))
+    }
+
 }

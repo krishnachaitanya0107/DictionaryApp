@@ -62,7 +62,7 @@ fun SearchWidget(
                 Text(
                     modifier = Modifier
                         .alpha(alpha = ContentAlpha.medium),
-                    text = "Search here...",
+                    text = "Search for a word here...",
                     color = Color.White
                 )
             },

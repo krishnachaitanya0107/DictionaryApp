@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import com.example.dictionaryapp.feature_dictionary.data.local.entity.WordInfoEntity
 
 
-@Database(entities = [WordInfoEntity::class], version = 2)
+@Database(entities = [WordInfoEntity::class], version = 1)
 @TypeConverters(Converters::class)
 abstract class WordInfoDatabase : RoomDatabase() {
 

@@ -36,6 +36,33 @@ class WordInfoViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
+    fun loadPreviousSearches() {
+        searchJob = viewModelScope.launch {
+            getWordInfo.invoke().onEach { result ->
+                when (result) {
+                    is Resource.Loading -> {
+                        _state.value = state.value.copy(
+                            wordInfoItems = result.data ?: emptyList(),
+                            isLoading = true
+                        )
+                    }
+                    is Resource.Success -> {
+                        _state.value = state.value.copy(
+                            wordInfoItems = result.data ?: emptyList(),
+                            isLoading = false
+                        )
+                    }
+                    is Resource.Error -> {
+                        _state.value = state.value.copy(
+                            wordInfoItems = result.data ?: emptyList(),
+                            isLoading = false
+                        )
+                    }
+                }
+            }.launchIn(this)
+        }
+    }
+
     fun updateQuery(query: String) {
         _searchQuery.value = query
     }
@@ -43,29 +70,29 @@ class WordInfoViewModel @Inject constructor(
     fun onSearch(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            getWordInfo(query).onEach { result ->
+            getWordInfo.invoke(query).onEach { result ->
                 when (result) {
+                    is Resource.Loading -> {
+                        _state.value = state.value.copy(
+                            wordInfoItems = result.data ?: emptyList(),
+                            isLoading = true
+                        )
+                    }
                     is Resource.Success -> {
                         _state.value = state.value.copy(
-                            result.data ?: emptyList(),
-                            false
+                            wordInfoItems = result.data ?: emptyList(),
+                            isLoading = false
                         )
                     }
                     is Resource.Error -> {
                         _state.value = state.value.copy(
-                            result.data ?: emptyList(),
-                            false
+                            wordInfoItems = result.data ?: emptyList(),
+                            isLoading = false
                         )
                         _eventFlow.emit(
                             UiEvent.ShowSnackbar(
                                 result.message ?: "Unknown Error"
                             )
-                        )
-                    }
-                    is Resource.Loading -> {
-                        _state.value = state.value.copy(
-                            result.data ?: emptyList(),
-                            true
                         )
                     }
                 }
