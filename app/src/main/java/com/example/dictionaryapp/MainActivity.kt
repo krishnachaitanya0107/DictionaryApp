@@ -1,9 +1,6 @@
 package com.example.dictionaryapp
 
-import android.content.Context
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -18,11 +15,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.dictionaryapp.feature_dictionary.domain.model.WordInfo
+import com.example.dictionaryapp.feature_dictionary.domain.use_case.OpenVoiceWithPermission
+import com.example.dictionaryapp.feature_dictionary.domain.use_case.initTextToSpeech
+import com.example.dictionaryapp.feature_dictionary.domain.use_case.runTts
+import com.example.dictionaryapp.feature_dictionary.domain.use_case.shutDownTts
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoItem
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoViewModel
-import com.example.dictionaryapp.feature_dictionary.domain.use_case.OpenVoiceWithPermission
-import com.example.dictionaryapp.feature_dictionary.domain.use_case.generateTextForNarration
 import com.example.dictionaryapp.feature_dictionary.presentation.components.SearchTopBar
 import com.example.dictionaryapp.ui.theme.DictionaryAppTheme
 import com.example.dictionaryapp.ui.theme.titleColor
@@ -35,10 +33,6 @@ import java.util.*
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private lateinit var textToSpeech: TextToSpeech
-    private var ttsError = true
-    private var cacheLoaded=false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -48,11 +42,10 @@ class MainActivity : ComponentActivity() {
 
                 val ctx = LocalContext.current
                 var clickToShowPermission by rememberSaveable { mutableStateOf(false) }
+                var initialized by rememberSaveable { mutableStateOf(false) }
 
                 val searchQuery by viewModel.searchQuery
                 val scaffoldState = rememberScaffoldState()
-
-                initTextToSpeech(ctx)
 
                 LaunchedEffect(key1 = true) {
                     viewModel.eventFlow.collectLatest { event ->
@@ -77,9 +70,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if(!cacheLoaded){
+                if(!initialized){
                     viewModel.loadPreviousSearches()
-                    cacheLoaded=true
+                    initTextToSpeech(ctx,viewModel)
+                    initialized=true
                 }
 
                 Scaffold(
@@ -130,9 +124,7 @@ class MainActivity : ComponentActivity() {
                                     WordInfoItem(
                                         wordInfo = wordInfo,
                                         onClick = {
-                                            if (!ttsError) {
-                                                runTts(i, viewModel, wordInfo)
-                                            }
+                                            runTts(i, viewModel, wordInfo)
                                         }
                                     )
                                     if (i < state.wordInfoItems.size - 1) {
@@ -152,57 +144,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-    private fun initTextToSpeech(ctx: Context) {
-        textToSpeech = TextToSpeech(ctx) { i ->
-            if (i != TextToSpeech.ERROR) {
-                ttsError = false
-            }
-        }
-
-        if (!ttsError) {
-            textToSpeech.language = Locale.ENGLISH
-        }
-    }
-
-    private fun runTts(
-        i: Int,
-        viewModel: WordInfoViewModel,
-        wordInfo: WordInfo
-    ) {
-
-        if (textToSpeech.isSpeaking) {
-            textToSpeech.stop()
-
-            if (i != viewModel.currentSpeakingIndex) {
-                textToSpeech.speak(
-                    generateTextForNarration(wordInfo),
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    ""
-                )
-                viewModel.currentSpeakingIndex = i
-            }
-        } else {
-            textToSpeech.speak(
-                generateTextForNarration(wordInfo),
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                ""
-            )
-            viewModel.currentSpeakingIndex = i
-        }
-
-
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            textToSpeech.shutdown()
-        } catch (e: Exception) {
-            Log.d("error", e.localizedMessage ?: "unknown error")
-        }
+        // shutdown tts engine here
     }
 
 }

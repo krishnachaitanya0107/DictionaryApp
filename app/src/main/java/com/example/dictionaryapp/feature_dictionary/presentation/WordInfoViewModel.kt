@@ -1,5 +1,6 @@
 package com.example.dictionaryapp.feature_dictionary.presentation
 
+import android.speech.tts.TextToSpeech
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,8 +32,16 @@ class WordInfoViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    var textFromSpeech: String? by mutableStateOf(null)
-    var currentSpeakingIndex = -1
+    private var _textFromSpeech: String? by mutableStateOf(null)
+    var textFromSpeech = _textFromSpeech
+
+    private val _currentSpeakingIndex = mutableStateOf(-1)
+    val currentSpeakingIndex = _currentSpeakingIndex
+
+    lateinit var textToSpeech: TextToSpeech
+
+    private val _ttsError = mutableStateOf(true)
+    var ttsError = _ttsError
 
     private var searchJob: Job? = null
 
@@ -65,6 +74,14 @@ class WordInfoViewModel @Inject constructor(
 
     fun updateQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun updateTtsError(error: Boolean) {
+        _ttsError.value = error
+    }
+
+    fun updateCurrentSpeakingIndx(index:Int){
+        _currentSpeakingIndex.value=index
     }
 
     fun onSearch(query: String) {

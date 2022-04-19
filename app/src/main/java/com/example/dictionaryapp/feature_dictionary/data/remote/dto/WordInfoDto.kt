@@ -4,14 +4,14 @@ import com.example.dictionaryapp.feature_dictionary.data.local.entity.WordInfoEn
 
 data class WordInfoDto(
     val meanings: List<MeaningDto>,
-    val phonetic: String,
+    val phonetic: String?,
     val phonetics: List<PhoneticDto>,
     val word: String
 ) {
     fun toWordInfoEntity(): WordInfoEntity {
         return WordInfoEntity(
             meanings = meanings.map { it.toMeaning() },
-            phonetic = phonetic,
+            phonetic = phonetic?:"",
             word = word
         )
     }

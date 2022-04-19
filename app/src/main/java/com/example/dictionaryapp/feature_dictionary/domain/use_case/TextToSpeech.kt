@@ -1,9 +1,16 @@
 package com.example.dictionaryapp.feature_dictionary.domain.use_case
 
+import android.content.Context
+import android.speech.tts.TextToSpeech
+import android.util.Log
 import com.example.dictionaryapp.feature_dictionary.domain.model.WordInfo
+import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoViewModel
+import java.util.*
 
 
-fun generateTextForNarration(wordInfo: WordInfo): String {
+fun generateTextForNarration(
+    wordInfo: WordInfo
+): String {
 
     var res = "The word " + wordInfo.word + " means "
     wordInfo.meanings.forEach { meaning ->
@@ -15,4 +22,68 @@ fun generateTextForNarration(wordInfo: WordInfo): String {
         }
     }
     return res
+}
+
+fun initTextToSpeech(
+    ctx: Context,
+    viewModel: WordInfoViewModel
+) {
+
+    viewModel.apply {
+
+        textToSpeech = TextToSpeech(ctx) { i ->
+            if (i != TextToSpeech.ERROR) {
+                updateTtsError(error = false)
+            }
+        }
+
+        if (!ttsError.value) {
+            textToSpeech.language = Locale.ENGLISH
+        }
+    }
+}
+
+fun runTts(
+    i: Int,
+    viewModel: WordInfoViewModel,
+    wordInfo: WordInfo
+) {
+
+    viewModel.apply {
+
+        if (!ttsError.value) {
+            if (textToSpeech.isSpeaking) {
+                textToSpeech.stop()
+
+                if (i != currentSpeakingIndex.value) {
+                    textToSpeech.speak(
+                        generateTextForNarration(wordInfo),
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        ""
+                    )
+                    updateCurrentSpeakingIndx(index = i)
+                }
+            } else {
+                textToSpeech.speak(
+                    generateTextForNarration(wordInfo),
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    ""
+                )
+                updateCurrentSpeakingIndx(index = i)
+            }
+        }
+    }
+
+}
+
+fun shutDownTts(
+    textToSpeech: TextToSpeech
+){
+    try {
+        textToSpeech.shutdown()
+    } catch (e: Exception) {
+        Log.d("error", e.localizedMessage ?: "unknown error")
+    }
 }
