@@ -16,9 +16,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.dictionaryapp.feature_dictionary.domain.use_case.OpenVoiceWithPermission
+import com.example.dictionaryapp.feature_dictionary.domain.use_case.ShowIconDialog
 import com.example.dictionaryapp.feature_dictionary.domain.use_case.initTextToSpeech
 import com.example.dictionaryapp.feature_dictionary.domain.use_case.runTts
-import com.example.dictionaryapp.feature_dictionary.domain.use_case.shutDownTts
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoItem
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoViewModel
 import com.example.dictionaryapp.feature_dictionary.presentation.components.SearchTopBar
@@ -27,7 +27,6 @@ import com.example.dictionaryapp.ui.theme.titleColor
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import java.util.*
 
 @ExperimentalPermissionsApi
 @AndroidEntryPoint
@@ -41,7 +40,6 @@ class MainActivity : ComponentActivity() {
                 val state = viewModel.state.value
 
                 val ctx = LocalContext.current
-                var clickToShowPermission by rememberSaveable { mutableStateOf(false) }
                 var initialized by rememberSaveable { mutableStateOf(false) }
 
                 val searchQuery by viewModel.searchQuery
@@ -57,23 +55,34 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (clickToShowPermission) {
+                if (viewModel.clickToShowPermission.value) {
                     OpenVoiceWithPermission(
-                        onDismiss = { clickToShowPermission = false },
+                        onDismiss = remember(viewModel) {
+                            {
+                                viewModel.updateShowPermission(false)
+                            }
+                        },
                         vm = viewModel,
                         ctxFromScreen = ctx
                     ) {
-                        if (!viewModel.textFromSpeech.isNullOrEmpty()) {
-                            viewModel.onSearch(viewModel.textFromSpeech!!)
+                        if (!viewModel.textFromSpeech.value.isNullOrEmpty()) {
+                            viewModel.onSearch(viewModel.textFromSpeech.value)
                         }
-                        clickToShowPermission = false
+                        viewModel.updateShowPermission(false)
                     }
                 }
 
-                if(!initialized){
+                if (!initialized) {
                     viewModel.loadPreviousSearches()
-                    initTextToSpeech(ctx,viewModel)
-                    initialized=true
+                    initTextToSpeech(ctx, viewModel)
+                    initialized = true
+                }
+
+                if (viewModel.isSpeechRecActive.value) {
+                    ShowIconDialog(
+                        onDismiss = {  },
+                        text = viewModel.speechRecognitionMsg.value
+                    )
                 }
 
                 Scaffold(
@@ -81,7 +90,11 @@ class MainActivity : ComponentActivity() {
                     floatingActionButtonPosition = FabPosition.End,
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { clickToShowPermission = true },
+                            onClick = remember(viewModel) {
+                                {
+                                    viewModel.updateShowPermission(true)
+                                }
+                            },
                             backgroundColor = MaterialTheme.colors.primary
                         ) {
                             Icon(

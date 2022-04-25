@@ -1,10 +1,10 @@
 package com.example.dictionaryapp.feature_dictionary.presentation
 
+import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dictionaryapp.core.util.Resource
@@ -32,11 +32,23 @@ class WordInfoViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    private var _textFromSpeech: String? by mutableStateOf(null)
-    var textFromSpeech = _textFromSpeech
+    private var _textFromSpeech = mutableStateOf("")
+    val textFromSpeech = _textFromSpeech
 
     private val _currentSpeakingIndex = mutableStateOf(-1)
     val currentSpeakingIndex = _currentSpeakingIndex
+
+    private val _speechRecognitionMsg = mutableStateOf("")
+    val speechRecognitionMsg = _speechRecognitionMsg
+
+    private val _clickToShowPermission = mutableStateOf(false)
+    var clickToShowPermission = _clickToShowPermission
+
+    private val _isSpeechRecActive = mutableStateOf(false)
+    val isSpeechRecActive = _isSpeechRecActive
+
+    private val _speechRecognizer: MutableState<SpeechRecognizer?> = mutableStateOf(null)
+    val speechRecognizer = _speechRecognizer
 
     lateinit var textToSpeech: TextToSpeech
 
@@ -76,12 +88,32 @@ class WordInfoViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
+    fun updateTextFromSpeech(text: String) {
+        _textFromSpeech.value = text
+    }
+
     fun updateTtsError(error: Boolean) {
         _ttsError.value = error
     }
 
-    fun updateCurrentSpeakingIndx(index:Int){
-        _currentSpeakingIndex.value=index
+    fun updateCurrentSpeakingIndex(index: Int) {
+        _currentSpeakingIndex.value = index
+    }
+
+    fun updateSpeechRecActive(isActive: Boolean) {
+        _isSpeechRecActive.value = isActive
+    }
+
+    fun updateSpeechRecognizer(speechRecognizer: SpeechRecognizer?) {
+        _speechRecognizer.value = speechRecognizer
+    }
+
+    fun updateSpeechRecognitionMsg(message: String) {
+        _speechRecognitionMsg.value = message
+    }
+
+    fun updateShowPermission(value: Boolean) {
+        _clickToShowPermission.value = value
     }
 
     fun onSearch(query: String) {

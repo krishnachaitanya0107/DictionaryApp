@@ -30,6 +30,8 @@ class WordInfoRepositoryImpl(
             emit(Resource.Error("Oops! Something went wrong", wordInfo))
         } catch (e: IOException) {
             emit(Resource.Error("Couldn't reach server , Check your internet connection", wordInfo))
+        } catch (e:Exception){
+            emit(Resource.Error("Oops! Something went wrong",wordInfo))
         }
 
         val newWordInfo = dao.getWordInfo(word).map { it.toWordInfo() }

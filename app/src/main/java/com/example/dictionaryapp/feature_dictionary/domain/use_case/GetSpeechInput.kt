@@ -4,18 +4,20 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -54,49 +56,13 @@ fun OpenVoiceWithPermission(
     PermissionRequired(
         permissionState = voicePermissionState,
         permissionNotGrantedContent = {
-            Dialog(onDismissRequest = onDismiss) {
-                Card(elevation = 12.dp, shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = stringResource(id = R.string.request_permission_msg),
-                            color = MaterialTheme.colors.titleColor
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { voicePermissionState.launchPermissionRequest() },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = MaterialTheme.colors.primary,
-                                contentColor = MaterialTheme.colors.titleColor
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(text = "Grant Permission")
-                        }
-                    }
-                }
+            ShowPermissionsDialog(onDismiss = onDismiss) {
+                voicePermissionState.launchPermissionRequest()
             }
         },
         permissionNotAvailableContent = {
-            Dialog(onDismissRequest = onDismiss) {
-                Card(elevation = 12.dp, shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = stringResource(id = R.string.request_permission_msg),
-                            color = MaterialTheme.colors.titleColor
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { newIntent(ctx) },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = MaterialTheme.colors.primary,
-                                contentColor = MaterialTheme.colors.titleColor
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(text = "Grant Permission")
-                        }
-                    }
-                }
+            ShowPermissionsDialog(onDismiss = onDismiss) {
+                newIntent(ctx)
             }
         }
     ) {
@@ -104,51 +70,155 @@ fun OpenVoiceWithPermission(
     }
 }
 
-fun startSpeechToText(vm: WordInfoViewModel, ctx: Context, finished: () -> Unit) {
-    val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(ctx)
-    val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-    speechRecognizerIntent.putExtra(
-        RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
-    )
-
-    speechRecognizer.setRecognitionListener(object : RecognitionListener {
-        override fun onReadyForSpeech(bundle: Bundle?) {}
-        override fun onBeginningOfSpeech() {
-            Toast.makeText(ctx,"Listening...",Toast.LENGTH_SHORT).show()
-            // change the color of mic icon to default color to indicate it is listening
-        }
-        override fun onRmsChanged(v: Float) {}
-        override fun onBufferReceived(bytes: ByteArray?) {}
-        override fun onEndOfSpeech() {
-            finished()
-            Toast.makeText(ctx,"Processing Speech...",Toast.LENGTH_SHORT).show()
-            // change the color of mic icon to gray to indicate it is not listening
-        }
-
-        override fun onError(i: Int) {
-            Log.d("error", "Oops , Something went wrong $i")
-            if(i==SpeechRecognizer.ERROR_NO_MATCH){
-                Toast.makeText(ctx,"No Results Found , Please Try Again",Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(ctx,"Oops , Something went wrong",Toast.LENGTH_SHORT).show()
+@Composable
+fun ShowPermissionsDialog(
+    onDismiss: () -> Unit,
+    onClick: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(elevation = 12.dp, shape = RoundedCornerShape(12.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = stringResource(id = R.string.request_permission_msg),
+                    color = MaterialTheme.colors.titleColor
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = onClick,
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.primary,
+                        contentColor = MaterialTheme.colors.titleColor
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Grant Permission")
+                }
             }
         }
+    }
+}
 
-        override fun onResults(bundle: Bundle) {
-            val result = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-            if (result != null) {
-                vm.textFromSpeech = result[0]
-            } else {
-                Toast.makeText(ctx,"No Results Found , Please Try Again",Toast.LENGTH_SHORT).show()
+@Composable
+fun ShowIconDialog(
+    onDismiss: () -> Unit,
+    text: String
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(elevation = 12.dp, shape = RoundedCornerShape(12.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = text,
+                    color = MaterialTheme.colors.titleColor,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_mic),
+                    modifier = Modifier.size(80.dp),
+                    contentDescription = "Mic",
+                    tint = MaterialTheme.colors.primary
+                )
             }
         }
+    }
 
-        override fun onPartialResults(bundle: Bundle) {
-            // ask user to speak again or search using results obtained
+}
+
+fun onCloseSpeechToText(vm: WordInfoViewModel) {
+    Handler(Looper.getMainLooper()).postDelayed({
+        vm.updateSpeechRecActive(isActive = false)
+        vm.updateSpeechRecognitionMsg("")
+        vm.updateSpeechRecognizer(null)
+    }, 1000)
+}
+
+fun startSpeechToText(
+    viewModel: WordInfoViewModel,
+    ctx: Context,
+    finished: () -> Unit
+) {
+
+    if (!viewModel.isSpeechRecActive.value && viewModel.speechRecognizer.value == null) {
+
+        var recognizer: SpeechRecognizer
+
+        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        speechRecognizerIntent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
+        )
+
+        viewModel.apply {
+
+            if (speechRecognizer.value == null) {
+                updateSpeechRecognizer(
+                    speechRecognizer = SpeechRecognizer.createSpeechRecognizer(
+                        ctx
+                    )
+                )
+            }
+
+            recognizer = speechRecognizer.value!!
+
+            recognizer.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(bundle: Bundle?) {
+                    updateSpeechRecActive(isActive = true)
+                    updateSpeechRecognitionMsg("Loading...")
+                }
+
+                override fun onBeginningOfSpeech() {
+                    updateSpeechRecognitionMsg("Listening...")
+                }
+
+                override fun onRmsChanged(v: Float) {}
+                override fun onBufferReceived(bytes: ByteArray?) {}
+                override fun onEndOfSpeech() {
+                    finished()
+                    updateSpeechRecognitionMsg("Processing Speech...")
+                }
+
+                override fun onError(i: Int) {
+                    Log.d("error", "Oops , Something went wrong $i")
+                    if (i == SpeechRecognizer.ERROR_NO_MATCH) {
+                        updateSpeechRecognitionMsg("No Results Found , Please Try Again")
+                    } else {
+                        updateSpeechRecognitionMsg("Oops , Something went wrong")
+                    }
+
+                    onCloseSpeechToText(viewModel)
+                }
+
+                override fun onResults(bundle: Bundle) {
+                    val result = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    if (result != null) {
+                        updateTextFromSpeech(text = result[0])
+                    } else {
+                        updateSpeechRecognitionMsg("No Results Found , Please Try Again")
+                    }
+
+                    onCloseSpeechToText(viewModel)
+                }
+
+                override fun onPartialResults(bundle: Bundle) {
+                    val result = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    if (result != null) {
+                        updateTextFromSpeech(text = result[0])
+                    } else {
+                        updateSpeechRecognitionMsg("Sorry , Didn't get that , Please Try Again")
+                    }
+
+                    onCloseSpeechToText(viewModel)
+                }
+
+                override fun onEvent(i: Int, bundle: Bundle?) {}
+
+            })
+
         }
-        override fun onEvent(i: Int, bundle: Bundle?) {}
 
-    })
-    speechRecognizer.startListening(speechRecognizerIntent)
+        recognizer.startListening(speechRecognizerIntent)
+
+    }
+
+
 }

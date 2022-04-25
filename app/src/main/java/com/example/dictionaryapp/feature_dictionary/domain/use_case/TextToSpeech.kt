@@ -62,7 +62,7 @@ fun runTts(
                         null,
                         ""
                     )
-                    updateCurrentSpeakingIndx(index = i)
+                    updateCurrentSpeakingIndex(index = i)
                 }
             } else {
                 textToSpeech.speak(
@@ -71,7 +71,7 @@ fun runTts(
                     null,
                     ""
                 )
-                updateCurrentSpeakingIndx(index = i)
+                updateCurrentSpeakingIndex(index = i)
             }
         }
     }
