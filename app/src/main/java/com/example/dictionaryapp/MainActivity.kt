@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -23,8 +25,10 @@ import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoItem
 import com.example.dictionaryapp.feature_dictionary.presentation.WordInfoViewModel
 import com.example.dictionaryapp.feature_dictionary.presentation.components.SearchTopBar
 import com.example.dictionaryapp.ui.theme.DictionaryAppTheme
+import com.example.dictionaryapp.ui.theme.descriptionColor
 import com.example.dictionaryapp.ui.theme.titleColor
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -42,6 +46,8 @@ class MainActivity : ComponentActivity() {
                 val ctx = LocalContext.current
                 var initialized by rememberSaveable { mutableStateOf(false) }
 
+                val statusBarColor = if (isSystemInDarkTheme()) Color.Black else Color.White
+
                 val searchQuery by viewModel.searchQuery
                 val scaffoldState = rememberScaffoldState()
 
@@ -53,6 +59,14 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+                }
+
+                val systemUiController = rememberSystemUiController()
+
+                SideEffect {
+                    systemUiController.setStatusBarColor(
+                        color = statusBarColor
+                    )
                 }
 
                 if (viewModel.clickToShowPermission.value) {
@@ -80,7 +94,7 @@ class MainActivity : ComponentActivity() {
 
                 if (viewModel.isSpeechRecActive.value) {
                     ShowIconDialog(
-                        onDismiss = {  },
+                        onDismiss = { },
                         text = viewModel.speechRecognitionMsg.value
                     )
                 }
@@ -100,7 +114,7 @@ class MainActivity : ComponentActivity() {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_mic),
                                 contentDescription = "Mic",
-                                tint = MaterialTheme.colors.titleColor
+                                tint = Color.White
                             )
                         }
                     }
@@ -126,6 +140,15 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                             Spacer(modifier = Modifier.height(16.dp))
+
+                            if (!viewModel.isSearchClicked) {
+                                Text(
+                                    text = "Recent searches...",
+                                    color = MaterialTheme.colors.descriptionColor
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()
                             ) {

@@ -56,6 +56,7 @@ class WordInfoViewModel @Inject constructor(
     var ttsError = _ttsError
 
     private var searchJob: Job? = null
+    var isSearchClicked=false
 
     fun loadPreviousSearches() {
         searchJob = viewModelScope.launch {
@@ -118,6 +119,9 @@ class WordInfoViewModel @Inject constructor(
 
     fun onSearch(query: String) {
         searchJob?.cancel()
+        if(!isSearchClicked){
+            isSearchClicked=true
+        }
         searchJob = viewModelScope.launch {
             getWordInfo.invoke(query).onEach { result ->
                 when (result) {

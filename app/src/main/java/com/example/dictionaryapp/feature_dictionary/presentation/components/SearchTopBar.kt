@@ -62,7 +62,7 @@ fun SearchWidget(
                 Text(
                     modifier = Modifier
                         .alpha(alpha = ContentAlpha.medium),
-                    text = "Search for a word here...",
+                    text = "Search for a word meaning here...",
                     color = Color.White
                 )
             },
@@ -79,7 +79,7 @@ fun SearchWidget(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = stringResource(R.string.search_icon),
-                        tint = MaterialTheme.colors.titleColor
+                        tint = Color.White
                     )
                 }
             },
@@ -100,7 +100,7 @@ fun SearchWidget(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.close_icon),
-                        tint = MaterialTheme.colors.titleColor
+                        tint = Color.White
                     )
                 }
             },
@@ -114,7 +114,7 @@ fun SearchWidget(
             ),
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = Color.Transparent,
-                cursorColor = MaterialTheme.colors.titleColor
+                cursorColor = Color.White
             )
         )
     }

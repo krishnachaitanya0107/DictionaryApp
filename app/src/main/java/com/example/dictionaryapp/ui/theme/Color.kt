@@ -4,8 +4,8 @@ import androidx.compose.material.Colors
 import androidx.compose.ui.graphics.Color
 
 val Teal200 = Color(0xFF03DAC5)
-val lightBlue= Color(0xFF10ACF3)
-val darkBlue= Color(0xFF3F51B5)
+val lightBlue = Color(0xFF10ACF3)
+val darkBlue = Color(0xFF3F51B5)
 
 val LightGray = Color(0xFFD8D8D8)
 val DarkGray = Color(0xFF2A2A2A)

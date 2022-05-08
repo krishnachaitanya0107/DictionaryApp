@@ -3,7 +3,7 @@
     android:opacity="opaque">
 
     <item
-        android:drawable="@color/black"
+        android:drawable="@color/background_color"
         />
 
     <item
