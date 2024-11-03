@@ -56,7 +56,7 @@ class WordInfoViewModel @Inject constructor(
     var ttsError = _ttsError
 
     private var searchJob: Job? = null
-    var isSearchClicked=false
+    var isSearchClicked = false
 
     fun loadPreviousSearches() {
         searchJob = viewModelScope.launch {
@@ -68,12 +68,14 @@ class WordInfoViewModel @Inject constructor(
                             isLoading = true
                         )
                     }
+
                     is Resource.Success -> {
                         _state.value = state.value.copy(
                             wordInfoItems = result.data ?: emptyList(),
                             isLoading = false
                         )
                     }
+
                     is Resource.Error -> {
                         _state.value = state.value.copy(
                             wordInfoItems = result.data ?: emptyList(),
@@ -119,11 +121,13 @@ class WordInfoViewModel @Inject constructor(
 
     fun onSearch(query: String) {
         searchJob?.cancel()
-        if(!isSearchClicked){
-            isSearchClicked=true
+        if (!isSearchClicked) {
+            isSearchClicked = true
         }
         searchJob = viewModelScope.launch {
-            getWordInfo.invoke(query).onEach { result ->
+            val cleanedQuery = query.trim()
+
+            getWordInfo.invoke(cleanedQuery).onEach { result ->
                 when (result) {
                     is Resource.Loading -> {
                         _state.value = state.value.copy(
@@ -131,12 +135,14 @@ class WordInfoViewModel @Inject constructor(
                             isLoading = true
                         )
                     }
+
                     is Resource.Success -> {
                         _state.value = state.value.copy(
                             wordInfoItems = result.data ?: emptyList(),
                             isLoading = false
                         )
                     }
+
                     is Resource.Error -> {
                         _state.value = state.value.copy(
                             wordInfoItems = result.data ?: emptyList(),
@@ -147,6 +153,8 @@ class WordInfoViewModel @Inject constructor(
                                 result.message ?: "Unknown Error"
                             )
                         )
+                        loadPreviousSearches()
+                        isSearchClicked = false
                     }
                 }
             }.launchIn(this)
