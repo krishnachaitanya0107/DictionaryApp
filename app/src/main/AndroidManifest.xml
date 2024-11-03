@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.dictionaryapp">
+    package="com.krishna.dictionaryapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
-        android:name=".MyApplication"
+        android:name="com.krishna.dictionaryapp.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DictionaryApp">
         <activity
-            android:name=".MainActivity"
+            android:name="com.krishna.dictionaryapp.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.DictionaryApp"
             android:windowSoftInputMode="adjustResize">

@@ -8,4 +8,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="background_color">@color/black</color>
 
+    <color name="app_logo_background">#f5a953</color>
 </resources>
